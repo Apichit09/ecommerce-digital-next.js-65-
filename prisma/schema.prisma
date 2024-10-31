@@ -1,0 +1,182 @@
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  username     String       @unique
+  password     String
+  email        String       @unique
+  balance      Float        @default(0.0)
+  imageLink    String?
+  role         Role         @default(USER)
+  purchases    Purchase[]
+  topUps       TopUpHistory[]
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+   topupTransactions TopupTransaction[]
+}
+
+model Product {
+  id           Int          @id @default(autoincrement())
+  name         String     
+  description  String      
+  price        Float       
+  images       Image[]    
+  categoryId   Int         
+  category     Category     @relation(fields: [categoryId], references: [id])
+  gameAccounts GameAccount[] 
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model GameAccount {
+  id           Int          @id @default(autoincrement())
+  product      Product      @relation(fields: [productId], references: [id])
+  productId    Int
+  accountUsername String    
+  accountPassword String    
+  details      String?      
+  isSold       Boolean      @default(false)
+  purchase     Purchase?    
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Purchase {
+  id           Int          @id @default(autoincrement())
+  user         User         @relation(fields: [userId], references: [id])
+  userId       Int
+  gameAccount  GameAccount  @relation(fields: [gameAccountId], references: [id])
+  gameAccountId Int         @unique
+  purchaseDate DateTime     @default(now())
+  price        Float        
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+model QRPayment {
+  id           Int          @id @default(autoincrement())
+  amount       Float        
+  qrCode      String       
+  status      PaymentStatus @default(PENDING)
+  topUpHistory TopUpHistory? @relation(fields: [topUpHistoryId], references: [id])
+  topUpHistoryId Int?      @unique
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model TopUpHistory {
+  id           Int          @id @default(autoincrement())
+  user         User         @relation(fields: [userId], references: [id])
+  userId       Int
+  amount       Float        
+  receiptLink  String?     
+  topUpDate    DateTime     @default(now())
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  qrPayment    QRPayment?
+}
+model TopupSetting {
+  id              Int      @id @default(autoincrement())
+  qrImage         String   
+  accountName     String   
+  accountNumber   String   
+  howToTopupImage String   
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model TopupTransaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  amount      Float
+  paymentType String   
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Category {
+  id          Int          @id @default(autoincrement())
+  name        String       
+  imageLink   String?      
+  products    Product[]    
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Image {
+  id          Int          @id @default(autoincrement())
+  url         String       
+  product     Product?     @relation(fields: [productId], references: [id])
+  productId   Int?         
+}
+
+model WebsiteInfo {
+  id          Int          @id @default(autoincrement())
+  name        String       
+  logoUrl     String       
+  navbarImage String       
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model HowTo {
+  id          Int          @id @default(autoincrement())
+  title       String       
+  imageLink   String?      
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model StatusCard {
+  id          Int          @id @default(autoincrement())
+  status      Int          
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Banner {
+  id          Int          @id @default(autoincrement())
+  imageLink   String       
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model ContactInfo {
+  id          Int          @id @default(autoincrement())
+  platform    String       
+  url         String       
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
